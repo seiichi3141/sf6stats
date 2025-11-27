@@ -14,7 +14,6 @@
 /coverage
 test-results
 playwright-report
-prisma/dev.db
 scripts/fetch-and-import.js
 data/raw
 
