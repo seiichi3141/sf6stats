@@ -1,0 +1,51 @@
+{
+  "league_rank": 36,
+  "league_alpha": "MASTER",
+  "val": [
+    {
+      "character_tool_name": "ryu",
+      "character_alpha": "RYU",
+      "play_rate": 9.284,
+      "count": 1,
+      "play_cnt": 0,
+      "total_cnt": 0,
+      "previous_rate": 8.174
+    },
+    {
+      "character_tool_name": "luke",
+      "character_alpha": "LUKE",
+      "play_rate": 4.174,
+      "count": 1,
+      "play_cnt": 0,
+      "total_cnt": 0,
+      "previous_rate": 4.568
+    },
+    {
+      "character_tool_name": "kimberly",
+      "character_alpha": "KIMBERLY",
+      "play_rate": 1.456,
+      "count": 1,
+      "play_cnt": 0,
+      "total_cnt": 0,
+      "previous_rate": 1.772
+    },
+    {
+      "character_tool_name": "chunli",
+      "character_alpha": "CHUN-LI",
+      "play_rate": 2.483,
+      "count": 1,
+      "play_cnt": 0,
+      "total_cnt": 0,
+      "previous_rate": 2.684
+    },
+    {
+      "character_tool_name": "manon",
+      "character_alpha": "MANON",
+      "play_rate": 2.883,
+      "count": 1,
+      "play_cnt": 0,
+      "total_cnt": 0,
+      "previous_rate": 3.355
+    }
+  ]
+}

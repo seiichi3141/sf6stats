@@ -1,0 +1,172 @@
+{
+  "usagerateData": [
+    {
+      "operation_type": 0,
+      "val": [
+        {
+          "league_rank": 0,
+          "league_alpha": "ALL",
+          "val": [
+            {
+              "character_tool_name": "ryu",
+              "character_alpha": "RYU",
+              "play_rate": 8.808,
+              "count": 18,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 7.604
+            },
+            {
+              "character_tool_name": "luke",
+              "character_alpha": "LUKE",
+              "play_rate": 3.773,
+              "count": 18,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 3.791
+            },
+            {
+              "character_tool_name": "kimberly",
+              "character_alpha": "KIMBERLY",
+              "play_rate": 1.381,
+              "count": 18,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 1.588
+            },
+            {
+              "character_tool_name": "chunli",
+              "character_alpha": "CHUN-LI",
+              "play_rate": 2.412,
+              "count": 18,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 2.559
+            },
+            {
+              "character_tool_name": "manon",
+              "character_alpha": "MANON",
+              "play_rate": 2.848,
+              "count": 18,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 3.259
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation_type": 1,
+      "val": [
+        {
+          "league_rank": 0,
+          "league_alpha": "ALL",
+          "val": [
+            {
+              "character_tool_name": "ryu",
+              "character_alpha": "RYU",
+              "play_rate": 10.199,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 8.65
+            },
+            {
+              "character_tool_name": "luke",
+              "character_alpha": "LUKE",
+              "play_rate": 2.99,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 2.975
+            },
+            {
+              "character_tool_name": "kimberly",
+              "character_alpha": "KIMBERLY",
+              "play_rate": 1.475,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 1.673
+            },
+            {
+              "character_tool_name": "chunli",
+              "character_alpha": "CHUN-LI",
+              "play_rate": 2.324,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 2.469
+            },
+            {
+              "character_tool_name": "manon",
+              "character_alpha": "MANON",
+              "play_rate": 2.981,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 3.348
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation_type": 2,
+      "val": [
+        {
+          "league_rank": 0,
+          "league_alpha": "ALL",
+          "val": [
+            {
+              "character_tool_name": "ryu",
+              "character_alpha": "RYU",
+              "play_rate": 4.576,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 4.012
+            },
+            {
+              "character_tool_name": "luke",
+              "character_alpha": "LUKE",
+              "play_rate": 6.151,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 6.593
+            },
+            {
+              "character_tool_name": "kimberly",
+              "character_alpha": "KIMBERLY",
+              "play_rate": 1.097,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 1.297
+            },
+            {
+              "character_tool_name": "chunli",
+              "character_alpha": "CHUN-LI",
+              "play_rate": 2.678,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 2.868
+            },
+            {
+              "character_tool_name": "manon",
+              "character_alpha": "MANON",
+              "play_rate": 2.445,
+              "count": 9,
+              "play_cnt": 0,
+              "total_cnt": 0,
+              "previous_rate": 2.952
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

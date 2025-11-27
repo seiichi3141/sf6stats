@@ -1,0 +1,25 @@
+{
+  "league_rank": "1",
+  "opponents": [
+    { "id": 2, "name_alpha": "LUKE", "tool_name": "luke", "input_type": "C", "_dsort": 0.47069455202685256 },
+    { "id": 21, "name_alpha": "JAMIE", "tool_name": "jamie", "input_type": "C", "_dsort": 0.4423873007594772 },
+    { "id": 5, "name_alpha": "MANON", "tool_name": "manon", "input_type": "C", "_dsort": 0.4650196259524359 },
+    { "id": 3, "name_alpha": "KIMBERLY", "tool_name": "kimberly", "input_type": "C", "_dsort": 0.46842105263157896 },
+    { "id": 17, "name_alpha": "MARISA", "tool_name": "marisa", "input_type": "C", "_dsort": 0.603637741568776 }
+  ],
+  "sampleRecord": {
+    "id": 2,
+    "name_alpha": "LUKE",
+    "tool_name": "luke",
+    "input_type": "C",
+    "total": "4.707",
+    "_win_rate": 0.47069455202685256,
+    "values": [
+      { "_oid": 2, "_dsort": 0.47069455202685256, "sf": 0, "thm": 0, "val": "-" },
+      { "_oid": 21, "_dsort": 0.4423873007594772, "sf": 0, "thm": 0, "val": "5.017" },
+      { "_oid": 5, "_dsort": 0.4650196259524359, "sf": 0, "thm": 0, "val": "5.111" },
+      { "_oid": 3, "_dsort": 0.46842105263157896, "sf": 0, "thm": 0, "val": "5.294" },
+      { "_oid": 17, "_dsort": 0.603637741568776, "sf": 1, "thm": 0, "val": "4.048" }
+    ]
+  }
+}
