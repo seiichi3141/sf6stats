@@ -22,14 +22,13 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Copy only the necessary artifacts
+# Copy artifacts and already-installed dependencies (includes dev deps like TypeScript needed to parse next.config.ts)
 COPY --from=builder /app/package.json /app/yarn.lock ./
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./
-
-# Install production dependencies
-RUN yarn install --frozen-lockfile --production
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 3000
 
