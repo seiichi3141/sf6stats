@@ -1,0 +1,79 @@
+// Prisma schema for SF6 stats (SQLite)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Season {
+  /// YYYYMM 形式 (例: 202509)
+  id      Int       @id
+  usages  UsageStat[]
+  matchups Matchup[]
+}
+
+model League {
+  id       Int       @id
+  alpha    String
+  usages   UsageStat[]
+  matchups Matchup[]
+}
+
+model Character {
+  id          Int        @id @default(autoincrement())
+  /// API にある数値 ID（dia の opponent_header.id など）を保持。使用率データにない場合は null。
+  externalId  Int?       @unique
+  toolName    String     @unique
+  nameAlpha   String
+  usages      UsageStat[]
+  matchupsAsSelf     Matchup[] @relation("MatchupsAsSelf")
+  matchupsAsOpponent Matchup[] @relation("MatchupsAsOpponent")
+}
+
+model UsageStat {
+  id            Int      @id @default(autoincrement())
+  seasonId      Int
+  leagueId      Int
+  characterId   Int
+  /// operation_type (0=全体/1=不明/2=不明など API の operation_type をそのまま保存)
+  operationType Int?
+  playRate      Float
+  previousRate  Float?
+  count         Int
+  playCnt       Int
+  totalCnt      Int
+
+  season   Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, leagueId, characterId, operationType])
+  @@index([seasonId, leagueId, characterId])
+}
+
+model Matchup {
+  id            Int   @id @default(autoincrement())
+  seasonId      Int
+  leagueId      Int
+  characterId   Int
+  opponentId    Int
+  /// _dsort: 0〜1 付近の勝率相当値
+  dsort         Float
+  /// val: 表示用数値文字列（例: "5.026"）
+  val           String?
+  /// _win_rate などの集計値を保持
+  winRate       Float?
+  sf            Int?
+  thm           Int?
+
+  season   Season   @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  league   League   @relation(fields: [leagueId], references: [id], onDelete: Cascade)
+  character Character @relation("MatchupsAsSelf", fields: [characterId], references: [id], onDelete: Cascade)
+  opponent  Character @relation("MatchupsAsOpponent", fields: [opponentId], references: [id], onDelete: Cascade)
+
+  @@unique([seasonId, leagueId, characterId, opponentId])
+  @@index([leagueId, seasonId, characterId])
+}
