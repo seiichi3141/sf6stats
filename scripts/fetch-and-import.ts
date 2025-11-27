@@ -1,8 +1,13 @@
-import { PrismaClient } from '@prisma/client';
+import prismaPkg from '@prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { chromium, type Browser, type Page } from '@playwright/test';
 import fs from 'fs';
 import path from 'path';
 import { setTimeout as delay } from 'timers/promises';
 
+const { PrismaClient } = prismaPkg;
+const adapter = new PrismaLibSql({ url: 'file:./prisma/dev.db' });
+const prisma = new PrismaClient({ adapter });
 /**
  * 対象期間: 2023-06 〜 2025-10
  * エンドポイント:
@@ -10,12 +15,19 @@ import { setTimeout as delay } from 'timers/promises';
  * - ダイヤ: /stats/dia/{YYYYMM}, /stats/dia_master/{YYYYMM}
  */
 
-const prisma = new PrismaClient();
-
 const BASE = 'https://www.streetfighter.com/6/buckler/api/ja-jp/stats';
-const START = { year: 2023, month: 6 };
-const END = { year: 2025, month: 10 };
+const START = { year: 2025, month: 10 };
+const END = { year: 2023, month: 7 };
 const RAW_DIR = path.join(process.cwd(), 'data', 'raw');
+
+let browserRef: Browser | null = null;
+let pageRef: Page | null = null;
+
+const resetBrowser = async () => {
+  if (browserRef) await browserRef.close();
+  browserRef = null;
+  pageRef = null;
+};
 
 type UsageApi = {
   usagerateData: {
@@ -70,32 +82,83 @@ type DiaEntry = {
 
 const monthsInRange = () => {
   const res: string[] = [];
+  const forward = START.year < END.year || (START.year === END.year && START.month <= END.month);
   let y = START.year;
   let m = START.month;
-  while (y < END.year || (y === END.year && m <= END.month)) {
+  const done = () =>
+    forward
+      ? y > END.year || (y === END.year && m > END.month)
+      : y < END.year || (y === END.year && m < END.month);
+
+  while (!done()) {
     res.push(`${y}${String(m).padStart(2, '0')}`);
-    m += 1;
-    if (m === 13) {
-      m = 1;
-      y += 1;
+    if (forward) {
+      m += 1;
+      if (m === 13) {
+        m = 1;
+        y += 1;
+      }
+    } else {
+      m -= 1;
+      if (m === 0) {
+        m = 12;
+        y -= 1;
+      }
     }
   }
   return res;
 };
 
-const fetchJson = async <T>(url: string): Promise<T> => {
-  const res = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (sf6stats-import)',
-      Accept: 'application/json',
-      Referer: 'https://www.streetfighter.com/6/buckler/',
-      'Accept-Language': 'ja,en;q=0.9',
-    },
+const getPage = async () => {
+  if (pageRef) return pageRef;
+  const envUA = process.env.SF6_UA;
+  const envCookie = process.env.SF6_COOKIE;
+
+  browserRef = await chromium.launch({ headless: false }); // headless false to mimic real browser
+  const context = await browserRef.newContext({
+    userAgent:
+      envUA ??
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36',
   });
-  if (!res.ok) {
-    throw new Error(`Fetch failed ${res.status} ${url}`);
+  context.setExtraHTTPHeaders({
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'Accept-Language': 'ja-JP,ja;q=0.9',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-CH-UA': '"Chromium";v="142", "Google Chrome";v="142", "Not_A Brand";v="99"',
+    'Sec-CH-UA-Mobile': '?0',
+    'Sec-CH-UA-Platform': '"macOS"',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+    ...(envCookie ? { Cookie: envCookie } : {}),
+    Referer: 'https://www.streetfighter.com/',
+    'Cache-Control': 'no-cache',
+    Pragma: 'no-cache',
+    Priority: 'u=0, i',
+  });
+  pageRef = await context.newPage();
+  return pageRef;
+};
+
+const fetchJson = async <T>(url: string): Promise<T> => {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const page = await getPage();
+    if (!page.url() || page.url() === 'about:blank') {
+      await page.goto('https://www.streetfighter.com/6/buckler/', { waitUntil: 'networkidle' });
+    }
+    const res = await page.goto(url, { waitUntil: 'networkidle' });
+    if (res && res.ok()) {
+      const body = await page.evaluate(() => document.body.innerText);
+      return JSON.parse(body) as T;
+    }
+    // 失敗時はブラウザをリセットしてリトライ
+    if (browserRef) await browserRef.close();
+    browserRef = null;
+    pageRef = null;
   }
-  return res.json() as Promise<T>;
+  throw new Error(`Fetch failed ${url}`);
 };
 
 const ensureSeason = async (id: number) => {
@@ -212,6 +275,16 @@ const importDia = async (month: string, master: boolean) => {
     console.warn(`No dia data for ${month} master=${master}`);
     return;
   }
+  const MATCHUP_CHUNK = 100;
+
+  const buffer: ReturnType<typeof prisma.matchup.upsert>[] = [];
+  const flush = async () => {
+    if (!buffer.length) return;
+    const batch = buffer.splice(0, buffer.length);
+    // Prisma 7 array transaction does not accept timeout; keep batches small instead.
+    await prisma.$transaction(batch);
+  };
+
   for (const [leagueKey, entry] of Object.entries(ciSort)) {
     const leagueId = Number(leagueKey);
     await ensureLeague(leagueId, leagueId === 36 ? 'MASTER' : leagueId.toString());
@@ -239,37 +312,45 @@ const importDia = async (month: string, master: boolean) => {
       for (const v of rec.values) {
         const oppId = opponentIdMap.get(v._oid);
         if (!oppId) continue;
-        await prisma.matchup.upsert({
-          where: {
-            seasonId_leagueId_characterId_opponentId: {
+        if (v._oid === rec.id) continue; // self matchup, val is "-" and dsort null
+        if (v.val === '-' || v._dsort === null || v._dsort === undefined) continue;
+        buffer.push(
+          prisma.matchup.upsert({
+            where: {
+              seasonId_leagueId_characterId_opponentId: {
+                seasonId,
+                leagueId,
+                characterId: charId,
+                opponentId: oppId,
+              },
+            },
+            update: {
+              dsort: v._dsort,
+              val: v.val,
+              winRate,
+              sf: v.sf,
+              thm: v.thm,
+            },
+            create: {
               seasonId,
               leagueId,
               characterId: charId,
               opponentId: oppId,
+              dsort: v._dsort,
+              val: v.val,
+              winRate,
+              sf: v.sf,
+              thm: v.thm,
             },
-          },
-          update: {
-            dsort: v._dsort,
-            val: v.val,
-            winRate,
-            sf: v.sf,
-            thm: v.thm,
-          },
-          create: {
-            seasonId,
-            leagueId,
-            characterId: charId,
-            opponentId: oppId,
-            dsort: v._dsort,
-            val: v.val,
-            winRate,
-            sf: v.sf,
-            thm: v.thm,
-          },
-        });
+          })
+        );
+        if (buffer.length >= MATCHUP_CHUNK) {
+          await flush();
+        }
       }
     }
   }
+  await flush();
   console.log(`Imported dia ${month} ${master ? 'master' : 'all'}`);
 };
 
@@ -281,13 +362,14 @@ const main = async () => {
   const months = monthsInRange();
   for (const m of months) {
     await importUsage(m, false);
-    await delay(300);
+    await delay(500);
     await importUsage(m, true);
-    await delay(300);
+    await delay(500);
     await importDia(m, false);
-    await delay(300);
+    await delay(500);
     await importDia(m, true);
-    await delay(300);
+    await delay(1500);
+    await resetBrowser();
   }
 };
 
