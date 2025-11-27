@@ -1,6 +1,7 @@
 # テスト環境まとめ
 
 ## ユニットテスト（Jest）
+
 - 設定: `jest.config.mjs`（next/jest.js を使用、`testEnvironment: jest-environment-jsdom`）。
 - セットアップ: `jest.setup.ts`（拡張マッチャー等をここに追加）。
 - 配置ルール: 各対象ディレクトリ配下に `__tests__` を作成し、その中に `.test.ts/.test.tsx` を置く。例: `app/__tests__/smoke.test.ts`。
@@ -10,6 +11,7 @@
 - カバレッジ: `coverage/` に出力（Git 追跡外）。
 
 ## E2E テスト（Playwright）
+
 - 設定: `playwright.config.ts`
   - `webServer`: `yarn dev` を自動起動し `http://localhost:3000`（`PLAYWRIGHT_BASE_URL` で上書き可）。
   - プロジェクト: `chromium` のみ（Safari/Firefox は無効化）。
@@ -21,6 +23,7 @@
 - 成果物: `test-results/`, `playwright-report/` は `.gitignore` 済み。
 
 ## コマンド一覧
+
 - `yarn test`: Jest 実行
 - `yarn test:unit`: Jest + カバレッジ
 - `yarn test:e2e --project=chromium`: Playwright（自動で dev サーバー起動）
