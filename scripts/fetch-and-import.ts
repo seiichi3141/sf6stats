@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import fs from 'fs';
 import path from 'path';
+import { setTimeout as delay } from 'timers/promises';
 
 /**
  * 対象期間: 2023-06 〜 2025-10
@@ -14,6 +15,7 @@ const prisma = new PrismaClient();
 const BASE = 'https://www.streetfighter.com/6/buckler/api/ja-jp/stats';
 const START = { year: 2023, month: 6 };
 const END = { year: 2025, month: 10 };
+const RAW_DIR = path.join(process.cwd(), 'data', 'raw');
 
 type UsageApi = {
   usagerateData: {
@@ -84,8 +86,10 @@ const monthsInRange = () => {
 const fetchJson = async <T>(url: string): Promise<T> => {
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'sf6stats-import/1.0',
+      'User-Agent': 'Mozilla/5.0 (sf6stats-import)',
       Accept: 'application/json',
+      Referer: 'https://www.streetfighter.com/6/buckler/',
+      'Accept-Language': 'ja,en;q=0.9',
     },
   });
   if (!res.ok) {
@@ -138,6 +142,14 @@ const ensureCharacter = async ({
 const importUsage = async (month: string, master: boolean) => {
   const url = `${BASE}/${master ? 'usagerate_master' : 'usagerate'}/${month}`;
   const json = await fetchJson<UsageApi>(url);
+  // ローカルに生データを保存
+  const dir = path.join(RAW_DIR, month);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, master ? 'usagerate_master.json' : 'usagerate.json'),
+    JSON.stringify(json, null, 2)
+  );
+
   const seasonId = Number(month);
   await ensureSeason(seasonId);
 
@@ -187,6 +199,13 @@ const importUsage = async (month: string, master: boolean) => {
 const importDia = async (month: string, master: boolean) => {
   const url = `${BASE}/${master ? 'dia_master' : 'dia'}/${month}`;
   const json = await fetchJson<DiaApi>(url);
+  const dir = path.join(RAW_DIR, month);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(
+    path.join(dir, master ? 'dia_master.json' : 'dia.json'),
+    JSON.stringify(json, null, 2)
+  );
+
   const seasonId = Number(month);
   const ciSort = master ? json.diaData.c?.ci_sort : json.diaData.ci?.ci_sort;
   if (!ciSort) {
@@ -262,9 +281,13 @@ const main = async () => {
   const months = monthsInRange();
   for (const m of months) {
     await importUsage(m, false);
+    await delay(300);
     await importUsage(m, true);
+    await delay(300);
     await importDia(m, false);
+    await delay(300);
     await importDia(m, true);
+    await delay(300);
   }
 };
 
