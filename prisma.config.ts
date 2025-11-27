@@ -2,7 +2,7 @@ import { defineConfig } from '@prisma/config';
 
 export default defineConfig({
   schema: './prisma/schema.prisma',
-  datasources: {
+  datasource: {
     db: {
       url: 'file:./prisma/dev.db',
     },
