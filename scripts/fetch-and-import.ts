@@ -19,6 +19,8 @@ const BASE = 'https://www.streetfighter.com/6/buckler/api/ja-jp/stats';
 const START = { year: 2025, month: 10 };
 const END = { year: 2023, month: 7 };
 const RAW_DIR = path.join(process.cwd(), 'data', 'raw');
+// マスター版のダイヤは 2025-02 以降のみ存在
+const DIA_MASTER_AVAILABLE_FROM = { year: 2025, month: 2 };
 
 let browserRef: Browser | null = null;
 let pageRef: Page | null = null;
@@ -28,6 +30,8 @@ const resetBrowser = async () => {
   browserRef = null;
   pageRef = null;
 };
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type UsageApi = {
   usagerateData: {
@@ -107,6 +111,18 @@ const monthsInRange = () => {
     }
   }
   return res;
+};
+
+const parseTargetMonths = (): string[] | null => {
+  // CLI: --months=202510,202509 or env IMPORT_MONTHS
+  const arg = process.argv.find((a) => a.startsWith('--months='));
+  const env = process.env.IMPORT_MONTHS;
+  const raw = arg ? arg.replace('--months=', '') : env;
+  if (!raw) return null;
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => /^\d{6}$/.test(s));
 };
 
 const getPage = async () => {
@@ -359,17 +375,29 @@ const main = async () => {
   const dbDir = path.join(process.cwd(), 'prisma');
   if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir);
 
-  const months = monthsInRange();
+  const months = parseTargetMonths() ?? monthsInRange();
   for (const m of months) {
     await importUsage(m, false);
-    await delay(500);
-    await importUsage(m, true);
-    await delay(500);
+    await sleep(10);
+    // マスター使用率は 2025-02 以降のみ存在
+    const [y, mo] = [Number(m.slice(0, 4)), Number(m.slice(4, 6))];
+    const masterUsageAvailable = y > 2025 || (y === 2025 && mo >= 2);
+    if (masterUsageAvailable) {
+      await importUsage(m, true);
+      await sleep(10);
+    }
+
+    // 対戦ダイヤ（全体）は常に取得。マスターは 2025-01 以降のみ。
     await importDia(m, false);
-    await delay(500);
-    await importDia(m, true);
-    await delay(1500);
-    await resetBrowser();
+    await sleep(10);
+    const diaMasterAvailable =
+      y > DIA_MASTER_AVAILABLE_FROM.year ||
+      (y === DIA_MASTER_AVAILABLE_FROM.year && mo >= DIA_MASTER_AVAILABLE_FROM.month);
+    if (diaMasterAvailable) {
+      await importDia(m, true);
+    }
+
+    await sleep(20);
   }
 };
 

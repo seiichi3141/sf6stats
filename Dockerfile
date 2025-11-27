@@ -9,6 +9,9 @@ RUN yarn install --frozen-lockfile
 # Copy source
 COPY . .
 
+# Include prebuilt SQLite DB
+COPY prisma/dev.db ./prisma/dev.db
+
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
